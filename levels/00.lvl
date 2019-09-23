@@ -1,0 +1,31 @@
+(deflevel ("Triforce" 2 30000)
+  :directors
+  ((:primary ()
+    (let ((phases '(:red :green :blue)))
+      (do-phases (d c :initial-phase (random-elt phases) :pre-fn #'(lambda (d) (circular-move-around d (sdl:point :x 300 :y 300) (* pi 1/1200))))
+        (:red
+          :initial (setf (@color d) sdl:*red*)
+          :interval 200
+          :delay 100
+          :normal (fire-bullets (@position d) 180 (angle-to-player d) 5 :spread (/ pi 6))
+          :duration 600
+          :next-phase (random-elt phases))
+        (:green
+          :initial (setf (@color d) sdl:*green*)
+          :interval 20
+          :delay 100
+          :normal (when (<= c 500)
+                    (fire-bullet (@position d) 240 (angle-to-player d)))
+          :duration 600
+          :next-phase (random-elt phases))
+        (:blue
+          :initial (setf (@color d) sdl:*blue*)
+          :interval 600
+          :delay 300
+          :normal (fire-bullets (@position d) 140 0 30 :spread (* 2 pi))
+          :duration 600
+          :next-phase (random-elt phases))))))
+  :initial-fn (mapcar #'(lambda (i)
+                          (let ((angle (- (* 2/3 pi i) (/ pi 2))))
+                            (create :primary :x (+ 300 (* 200 (cos angle))) :y (+ 300 (* 200 (sin angle))))))
+                      '(0 1 2)))

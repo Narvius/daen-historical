@@ -1,0 +1,25 @@
+(deflevel ("Test" 7 30000)
+  :directors
+  ((:main ()
+    (let ((state nil))
+      (do-phases (d c :initial-phase :barrage)
+	(:barrage :normal (fire-bullets (@position d) 220 (angle-to-player d) 12
+					:vel-rand 100 :spread (/ pi 6) :rand-spread t)
+		  :final (add-director (create :sub :x (~ d @position @x) :y (~ d @position @y) :delay 1500))
+		  :interval 80
+		  :duration 400
+		  :next-phase :move-to-player)
+	(:move-to-player :initial ((setf state (sdl:copy-point (~ *screen* @player @position)))
+				   (set-length (@velocity d) 160)
+				   (set-angle (@velocity d) (angle-to-player d)))
+			 :normal (fire-bullet (@position d) 520 (angle-to-player d))
+			 :interval 30
+			 :final ((sdl:set-point (@position d) state)
+				 (sdl:set-point-* (@velocity d) :x 0 :y 0)
+				 (setf state nil))
+			 :next-phase :barrage
+			 :finish-check (< (sdl:distance (@position d) state) 10)))))
+   (:sub ()
+    (do-repeat (d :interval 2500)
+      (fire-bullets (@position d) 220 (angle-to-player d) 8 :vel-rand 100 :spread (/ pi 7) :rand-spread t))))
+  :initial-fn (list (create :main :x 300 :y 300)))

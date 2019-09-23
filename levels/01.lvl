@@ -1,0 +1,20 @@
+(deflevel ("Trapped" 4 30000)
+  :directors
+    ((:main ()
+      (let ((angles (list (/ pi 3) pi (- (/ pi 3)))))
+	(do-phases (d c :initial-phase :main :granularity 100)
+	  (:main :initial ((set-length (@velocity d) 120)
+			   (if angles
+			       (progn
+				 (set-angle (@velocity d) (car angles))
+				 (setf angles (cdr angles)))
+			       (kill-director d)))
+		 :interval 8
+		 :delay 5
+		 :normal (add-director (create :sub :x (~ d @position @x) :y (~ d @position @y)))
+		 :duration 50
+		 :next-phase :main))))
+     (:sub ()
+      (do-repeat (d :interval 1500)
+	(fire-bullet (@position d) 150 (angle-to-player d)))))
+    :initial-fn (list (create :main :x 300 :y 0)))

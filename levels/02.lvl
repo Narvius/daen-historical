@@ -1,0 +1,41 @@
+(deflevel ("Terminators" 7 45000)
+  :directors
+  ((:main (&optional (pre-fn nil))
+    (let ((state nil)
+	  (phases '(:split :chain :suppress)))
+      (do-phases (d c :initial-phase (random-elt phases) :pre-fn pre-fn)
+	(:split :initial (setf (@color d) sdl:*red*)
+		:interval 280
+		:normal (let ((g (new-group)))
+			  (fire-bullets (@position d) 160 (angle-to-player d) 8 :spread (/ pi 4) :group g)
+			  (add-effect g 1200
+				      :fn #'(lambda (b)
+					      (split-bullet b 7 :vel 200 :dir (random (* 2 pi))
+							    :spread (* 2 pi)))
+				      :final-fn #'(lambda (bg e)
+						    (declare (ignore e))
+						    (kill-group bg))))
+		:duration 800
+		:next-phase (random-elt phases))
+	(:chain :initial ((setf (@color d) sdl:*green*)
+			  (setf state (new-group)))
+		:interval 30
+		:normal (fire-bullet (@position d) 190 (angle-to-player d) :group state)
+		:duration 240
+		:final ((apply-to-group state #'(lambda (b)
+						  (split-bullet
+						   b 3 :vel 200 :dir (random (* 2 pi)) :spread (* 2 pi))))
+			(kill-group state)
+			(setf state nil))
+		:next-phase (random-elt phases))
+	(:suppress :initial (setf (@color d) sdl:*blue*)
+		   :interval 5
+		   :normal (fire-bullets (@position d) 220 (angle-to-player d) 1
+					 :vel-rand 80 :spread (/ pi 4) :rand-spread t)
+		   :duration 600
+		   :next-phase (random-elt phases))))))
+  :initial-fn
+  (list (create :main :x 300 :y 40)
+	(create :main :x 300 :y 560 :args (list #'(lambda (d)
+						    (set-length (@velocity d) (/ (distance d (get-player)) 4))
+						    (set-angle (@velocity d) (angle-to-player d)))))))
